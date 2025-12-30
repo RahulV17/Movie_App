@@ -1,7 +1,18 @@
 export const getMoviesBySearch = (movies = [], value = "") => {
-  if (!value.trim()) return movies;
+  if (!value || !value.trim()) return movies;
 
-  return movies.filter(movie =>
-    movie.name?.toLowerCase().includes(value.toLowerCase())
-  );
+  const searchTerm = value.toLowerCase();
+
+  return movies.filter(movie => {
+    const titleMatch = (movie.title || movie.name || movie.original_title || "")
+      .toLowerCase()
+      .includes(searchTerm);
+
+    
+    const castMatch = Array.isArray(movie.casts) && movie.casts.some(cast => 
+      (cast.name || "").toLowerCase().includes(searchTerm)
+    );
+
+    return titleMatch || castMatch;
+  });
 };

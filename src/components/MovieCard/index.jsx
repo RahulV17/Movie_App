@@ -4,28 +4,40 @@ import { Card, CardContent, CardMedia, Typography, Button, Grid, Dialog, DialogT
 export default function MovieCard({ movie }) {
   const {
     original_title,
+    title,
+    name,
     overview,
     poster_path,
     vote_average,
-    casts = [],
+    casts,
   } = movie;
 
+  const safeCasts = Array.isArray(casts) ? casts : [];
   const [open, setOpen] = useState(false);
+  
+ 
+  const displayTitle = original_title || title || name || "Unknown Title";
 
-  const heroCast = casts.filter(
-    (c) =>
-      c.character?.toLowerCase().includes("hero") ||
-      c.character?.toLowerCase().includes("heroine")
-  );
+  
+  const getCastPriority = (characterName) => {
+    const char = (characterName || "").toLowerCase();
 
-  const otherCast = casts.filter(
-    (c) =>
-      !c.character?.toLowerCase().includes("hero") &&
-      !c.character?.toLowerCase().includes("heroine")
-  );
+    if (char.includes("second heroine")) return 3;
+    
+    if (char.includes("heroine")) return 2;
+    
+    if (char.includes("hero")) return 1;
 
-  const orderedCast = [...heroCast, ...otherCast];
-  const topCasts = orderedCast.slice(0, 3);
+   
+    return 4;
+  };
+
+  const sortedCasts = [...safeCasts].sort((a, b) => {
+    return getCastPriority(a.character) - getCastPriority(b.character);
+  });
+ 
+
+  const topCasts = sortedCasts.slice(0, 3);
 
   return (
     <>
@@ -53,21 +65,25 @@ export default function MovieCard({ movie }) {
               backgroundColor: "#eee",
             }}
           >
-            <CardMedia
-              component="img"
-              image={poster_path}
-              alt={original_title}
-              sx={{
-                maxHeight: "100%",
-                maxWidth: "100%",
-                objectFit: "contain",
-              }}
-            />
+            {poster_path ? (
+              <CardMedia
+                component="img"
+                image={poster_path}
+                alt={displayTitle}
+                sx={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  objectFit: "contain",
+                }}
+              />
+            ) : (
+               <Typography variant="caption">No Image</Typography>
+            )}
           </Box>
 
           <CardContent sx={{ px: 0 }}>
             <Typography variant="subtitle1" fontWeight={600} noWrap>
-              {original_title}
+              {displayTitle}
             </Typography>
 
             <Typography
@@ -80,7 +96,7 @@ export default function MovieCard({ movie }) {
                 overflow: "hidden",
               }}
             >
-              {overview}
+              {overview || "No overview available."}
             </Typography>
 
             <Button
@@ -92,7 +108,7 @@ export default function MovieCard({ movie }) {
             </Button>
 
             <Typography variant="body2" mt={0.5}>
-              ⭐ {vote_average}
+              ⭐ {vote_average || "N/A"}
             </Typography>
 
             {topCasts.length > 0 && (
@@ -120,9 +136,9 @@ export default function MovieCard({ movie }) {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>{original_title}</DialogTitle>
+        <DialogTitle>{displayTitle}</DialogTitle>
         <DialogContent>
-          <Typography>{overview}</Typography>
+          <Typography>{overview || "No details available."}</Typography>
         </DialogContent>
       </Dialog>
     </>
